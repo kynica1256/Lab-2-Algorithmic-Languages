@@ -1,1 +1,1 @@
-# Lab-2---Algorithmic-Languages
+# Lab-2-Algorithmic-Languages
