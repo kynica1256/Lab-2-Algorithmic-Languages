@@ -1,3 +1,9 @@
-/tester.exe
-/main.exe
-/tester.cpp
+*
+
+!main.cpp
+!CompressedStation.txt
+!Pipelines.txt
+!README.md
+!CstationTop1.txt
+!Pipes.txt
+!logs_Pipelines.txt

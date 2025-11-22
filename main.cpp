@@ -16,16 +16,6 @@ using namespace std;
 struct Pipeline {
     string Name;
     string titles[4];
-    /**
-    int Length;
-    int Diameters;
-    string State;
-    string titles[4];
-
-    int LengthFactory; // Количество цехов
-    int TypeOfStation; // Тип КС
-    int LengthFactoryWork; // Количество цехов в работе
-    **/
     int cell1; // Количество цехов, Протяжённость(км)
     int cell2; // Количество цехов в работе, Диаметр
     int cell3; // Тип КС, Состояние(0 - on, 1 - off)
@@ -62,6 +52,8 @@ int CinSpecial;
 
 vector<string> vec(4);
 vector<Pipeline> PipeLines;
+vector<Pipeline> PipeLinesFocus;
+vector<int> ids_Focus;
 Pipeline Reader(int indx, string name, string title[4]) {
     PipeLines.clear();
     string text;
@@ -331,11 +323,87 @@ void EditFunc(string name, string title[], Pipeline *pipelines, int *CommandCode
 int TypesOfState[2] = {0, 1};
 vector<int> ids_;
 vector<Pipeline> pipelines_;
+
+
+
+
+
+int num_;
+int* ids_1;
+Pipeline* pipelines_1;
+string buffer_;
+
+void CycelCoreFunction(string name, string title[]) {
+    num_ = 0;
+    cout << "To stop the transfer, enter - stop. To select all available options - all." << endl;
+    for (int i = 0; i < PipeLines.size(); i++) {
+        cout << "[Id]: ";
+        cin >> CommandCycle;
+        CinSpecial = CinFunc(name);
+        if (CinSpecial == 1) {
+            break;
+        }
+        cout << endl;
+        if (CommandCycle == "stop") {
+            break;
+        }
+        if (CommandCycle == "all") {
+            ids_ = ids_Focus;
+            pipelines_ = PipeLinesFocus;
+            break;
+        }
+        try {
+            num_ = stoi(CommandCycle);
+            ids_.push_back(num_);
+            pipelines_.push_back(PipeLines[num_]);
+            num_ = 0;
+        } catch (const invalid_argument& e) {
+            cerr << "Input error." << endl;
+            Logging("Error - Input error.", name);
+            break;
+        } catch (const out_of_range& e) {
+            cerr << "Input error." << endl;
+            Logging("Error - Input error.", name);
+            break;
+        }
+    }
+    int size_ = ids_.size();
+    if (size_ == 0) {
+        return;
+    }
+    ids_1 = new int[size_];
+    for (int i = 0; i < size_; i++) {
+        ids_1[i] = ids_[i];
+    }
+    pipelines_1 = new Pipeline[size_];
+    for (int i = 0; i < size_; i++) {
+        pipelines_1[i] = pipelines_[i];
+    }
+    EditFunc(name, title, pipelines_1, ids_1, size_);
+    delete[] ids_1;
+    delete[] pipelines_1;
+    Pipeline pipeline = Reader(0, name, title);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 int CoreFunc(string name, string title[]) {
-    int num_;
+    num_ = 0;
+    buffer_ = "";
+    /**int num_;
     int* ids_1;
     Pipeline* pipelines_1;
-    string buffer_;
+    string buffer_;*/
     while (true) {
         cout << "[\n 0 - Edit,\n 1 - Create new,\n 2 - Delete,\n 3 - Check info,\n 4 - Main menu,\n 5 - Finished program,\n 6 - Filter\n]: ";
         cin >> CommandCode2;
@@ -476,6 +544,8 @@ int CoreFunc(string name, string title[]) {
                 if (CommandCode3 == 0) {
                     ids_.clear();
                     pipelines_.clear();
+                    PipeLinesFocus.clear();
+                    ids_Focus.clear();
                     Pipeline pipeline = Reader(0, name, title);
                     num_ = 0;
                     cout << "[Substring]: ";
@@ -489,55 +559,18 @@ int CoreFunc(string name, string title[]) {
                         buffer_ = i.Name;
                         if(buffer_.find(SubstringCommand) != string::npos) {
                             cout << num_ << ": " << buffer_ << endl;
+                            PipeLinesFocus.push_back(i);
+                            ids_Focus.push_back(num_);
                         }
                         num_++;
                     }
-                    num_ = 0;
-                    cout << "To stop the transfer, enter - stop." << endl;
-                    for (int i = 0; i < PipeLines.size(); i++) {
-                        cout << "[Id]: ";
-                        cin >> CommandCycle;
-                        CinSpecial = CinFunc(name);
-                        if (CinSpecial == 1) {
-                            break;
-                        }
-                        cout << endl;
-                        if (CommandCycle == "stop") {
-                            break;
-                        }
-                        try {
-                            num_ = stoi(CommandCycle);
-                            ids_.push_back(num_);
-                            pipelines_.push_back(PipeLines[num_]);
-                            num_ = 0;
-                        } catch (const invalid_argument& e) {
-                            cerr << e.what() << endl;
-                            break;
-                        } catch (const out_of_range& e) {
-                            cerr << e.what() << endl;
-                            break;
-                        }
-                    }
-                    int size_ = ids_.size();
-                    if (size_ == 0) {
-                        break;
-                    }
-                    ids_1 = new int[size_];
-                    for (int i = 0; i < size_; i++) {
-                        ids_1[i] = ids_[i];
-                    }
-                    pipelines_1 = new Pipeline[size_];
-                    for (int i = 0; i < size_; i++) {
-                        pipelines_1[i] = pipelines_[i];
-                    }
-
-                    EditFunc(name, title, pipelines_1, ids_1, size_);
-                    delete[] ids_1;
-                    delete[] pipelines_1;
+                    CycelCoreFunction(name, title);
                 }
                 if(CommandCode3 == 1 & name == "Pipelines.txt") {
                     ids_.clear();
                     pipelines_.clear();
+                    PipeLinesFocus.clear();
+                    ids_Focus.clear();
                     Pipeline pipeline = Reader(0, name, title);
                     num_ = 0;
                     cout << "[\n 0 - On,\n 1 - Off\n]: ";
@@ -549,88 +582,39 @@ int CoreFunc(string name, string title[]) {
                     cout << endl;
                     for (const auto& pipeline_ : PipeLines) {
                         if (pipeline_.cell3 == TypesOfState[CommandCode4]) {
-                            ids_.push_back(num_);
-                            pipelines_.push_back(pipeline_);
                             cout << num_ << ": " << pipeline_.Name << endl;
+                            PipeLinesFocus.push_back(pipeline_);
+                            ids_Focus.push_back(num_);
                         }
                         num_++;
                     }
-                    int size_ = ids_.size();
-                    ids_1 = new int[ids_.size()];
-                    for (int i = 0; i < ids_.size(); i++) {
-                        ids_1[i] = ids_[i];
-                    }
-                    pipelines_1 = new Pipeline[pipelines_.size()];
-                    for (int i = 0; i < pipelines_.size(); i++) {
-                        pipelines_1[i] = pipelines_[i];
-                    }
-                    EditFunc(name, title, pipelines_1, ids_1, size_);
-                    delete[] ids_1;
-                    delete[] pipelines_1;
+                    CycelCoreFunction(name, title);
                 }
                 if(CommandCode3 == 1 & name == "CompressedStation.txt") {
                     ids_.clear();
                     pipelines_.clear();
+                    PipeLinesFocus.clear();
+                    ids_Focus.clear();
                     Pipeline pipeline = Reader(0, name, title);
                     vector<Pipeline> Pipelines = PipeLines;
-                    vector<size_t> indices(Pipelines.size());
-                    for (size_t i = 0; i < Pipelines.size(); ++i) {
+                    vector<int> indices(Pipelines.size());
+                    for (int i = 0; i < Pipelines.size(); ++i) {
                         indices[i] = i;
                     }
                     sort(indices.begin(), indices.end(),
-                              [&Pipelines](size_t i, size_t j) {
+                              [&Pipelines](int i, int j) {
                                   if (Pipelines[i].cell1 == 0 || Pipelines[j].cell1 == 0) {
                                     return Pipelines[i].cell1 > Pipelines[j].cell1;
                                   }
                                   return (double(Pipelines[i].cell2) / double(Pipelines[i].cell1)) * 100 < 
                                          (double(Pipelines[j].cell2) / double(Pipelines[j].cell1)) * 100;
                               });
-                    for (size_t idx : indices) {
+                    for (int idx : indices) {
+                        ids_Focus.push_back(idx);
+                        PipeLinesFocus.push_back(Pipelines[idx]);
                         cout << idx << ": " << Pipelines[idx].Name << ", " << double(Pipelines[idx].cell2)/double(Pipelines[idx].cell1) * 100 << "%" << std::endl;
                     }
-                    num_ = 0;
-                    cout << "To stop the transfer, enter - stop." << endl;
-                    for (int i = 0; i < Pipelines.size(); i++) {
-                        cout << "[Id]: ";
-                        cin >> CommandCycle;
-                        CinSpecial = CinFunc(name);
-                        if (CinSpecial == 1) {
-                            break;
-                        }
-                        cout << endl;
-                        if (CommandCycle == "stop") {
-                            break;
-                        }
-                        try {
-                            num_ = stoi(CommandCycle);
-                            ids_.push_back(num_);
-                            pipelines_.push_back(PipeLines[num_]);
-                            num_ = 0;
-                        } catch (const invalid_argument& e) {
-                            cerr << e.what() << endl;
-                            break;
-                        } catch (const out_of_range& e) {
-                            cerr << e.what() << endl;
-                            break;
-                        }
-                    }
-                    int size_ = ids_.size();
-                    if (size_ == 0) {
-                        break;
-                    }
-                    ids_1 = new int[size_];
-                    for (int i = 0; i < size_; i++) {
-                        ids_1[i] = ids_[i];
-                    }
-                    pipelines_1 = new Pipeline[size_];
-                    for (int i = 0; i < size_; i++) {
-                        pipelines_1[i] = pipelines_[i];
-                    }
-
-                    EditFunc(name, title, pipelines_1, ids_1, size_);
-                    delete[] ids_1;
-                    delete[] pipelines_1;
-                    pipeline = Reader(0, name, title);
+                    CycelCoreFunction(name, title);
                 }
                 if (CommandCode3 == 2) {
                     ids_.clear();
